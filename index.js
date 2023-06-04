@@ -43,26 +43,65 @@ async function run() {
 
     app.post("/reviews", async (req, res) => {
       const review = req.body;
-      console.log(review);
+      // console.log(review);
       const result = await reviewsCollections.insertOne(review);
       res.send(result);
     });
 
+    //reviews
+
     app.get("/reviews", async (req, res) => {
+      console.log(req.query);
       let query = {};
-      //  if (req.query.email) {
-      //    query = {
-      //      email: req.query.email,
-      //    };
-      //  }
-      const cursor = reviewsCollections.find(query);
-      const reviews = await cursor.toArray();
-      res.send(reviews);
+      if (req.query.email) {
+        query = {
+          email: req.query.email,
+        };
+        const cursor = reviewsCollections.find(query);
+        const reviews = await cursor.toArray();
+        res.send(reviews);
+      } else {
+        query = {
+          reviewId: req.query.reviewId,
+        };
+        const cursor = reviewsCollections.find(query);
+        const reviews = await cursor.toArray();
+        res.send(reviews);
+      }
     });
 
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    //delete review
+
+    app.delete("/reviews/:id", async (req, res) => {
+      const { id } = req.params;
+      const query = { _id: new ObjectId(id) };
+      const result = await reviewsCollections.deleteOne(query);
+      res.send(result);
+    });
+
+    //update
+
+    app.patch("/reviews/:id", async (req, res) => {
+      const { id } = req.params;
+      const { rating, message } = req.body;
+      console.log(rating, message);
+      const query = { _id: new ObjectId(id) };
+      const updatedoc = {
+        $set: {
+          reviewMsg: message,
+          rating: rating,
+        },
+      };
+      const result = await reviewsCollections.updateOne(query, updatedoc);
+      res.send(result);
+    });
+
+    app.get("/reviews/:id", async (req, res) => {
+      const { id } = req.params;
+      const query = { _id: new ObjectId(id) };
+      const result = await reviewsCollections.findOne(query);
+      res.send(result);
+    });
   } finally {
     // await client.close();
   }
